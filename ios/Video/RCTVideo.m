@@ -51,6 +51,8 @@ static int const RCTVideoUnset = -1;
   
   /* Keep track of any modifiers, need to be applied after each play */
   float _volume;
+  NSTimeInterval _minBufferS;
+  BOOL _automaticallyWaitsToMinimizeStalling;
   float _rate;
   float _maxBitRate;
 
@@ -93,6 +95,8 @@ static int const RCTVideoUnset = -1;
     _playbackStalled = NO;
     _rate = 1.0;
     _volume = 1.0;
+    _minBufferS = 15;
+    _automaticallyWaitsToMinimizeStalling = YES;
     _resizeMode = @"AVLayerVideoGravityResizeAspectFill";
     _fullscreenAutorotate = YES;
     _fullscreenOrientation = @"all";
@@ -350,7 +354,9 @@ static int const RCTVideoUnset = -1;
 
     // perform on next run loop, otherwise other passed react-props may not be set
     [self playerItemForSource:source withCallback:^(AVPlayerItem * playerItem) {
+      NSLog(@"~~~~~~ minBuffer: %f waits: %@", _minBufferS, _automaticallyWaitsToMinimizeStalling ? @"YES" : @"NO");
       _playerItem = playerItem;
+      _playerItem.preferredForwardBufferDuration = _minBufferS;
       [self addPlayerItemObservers];
       [self setFilter:_filterName];
       [self setMaxBitRate:_maxBitRate];
@@ -368,6 +374,7 @@ static int const RCTVideoUnset = -1;
         
       _player = [AVPlayer playerWithPlayerItem:_playerItem];
       _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
+      _player.automaticallyWaitsToMinimizeStalling = _automaticallyWaitsToMinimizeStalling;
         
       [_player addObserver:self forKeyPath:playbackRate options:0 context:nil];
       _playbackRateObserverRegistered = YES;
@@ -948,6 +955,22 @@ static int const RCTVideoUnset = -1;
   [self applyModifiers];
 }
 
+- (void)setBufferConfig:(NSDictionary *)bufferConfig {
+    NSNumber *minBufferMs = [bufferConfig objectForKey:@"minBufferMs"];
+    NSNumber *automaticallyWaitsToMinimizeStalling = [bufferConfig objectForKey:@"automaticallyWaitsToMinimizeStalling"];
+    if (minBufferMs) {
+        _minBufferS = [minBufferMs floatValue] / 1000.0;
+    }
+    
+    if (automaticallyWaitsToMinimizeStalling) {
+        _automaticallyWaitsToMinimizeStalling = [automaticallyWaitsToMinimizeStalling boolValue];
+    }
+    
+    if (minBufferMs || automaticallyWaitsToMinimizeStalling) {
+        [self applyModifiers];
+    }
+}
+
 - (void)setMaxBitRate:(float) maxBitRate {
   _maxBitRate = maxBitRate;
   _playerItem.preferredPeakBitRate = maxBitRate;
@@ -974,6 +997,8 @@ static int const RCTVideoUnset = -1;
   [self setPaused:_paused];
   [self setControls:_controls];
   [self setAllowsExternalPlayback:_allowsExternalPlayback];
+  _playerItem.preferredForwardBufferDuration = _minBufferS;
+  _player.automaticallyWaitsToMinimizeStalling = _automaticallyWaitsToMinimizeStalling;
 }
 
 - (void)setRepeat:(BOOL)repeat {

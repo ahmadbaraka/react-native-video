@@ -346,6 +346,7 @@ minBufferMs | number | The default minimum duration of media that the player wil
 maxBufferMs | number | The default maximum duration of media that the player will attempt to buffer, in milliseconds.
 bufferForPlaybackMs | number | The default duration of media that must be buffered for playback to start or resume following a user action such as a seek, in milliseconds.
 playbackAfterRebufferMs | number | The default duration of media that must be buffered for playback to resume after a rebuffer, in milliseconds. A rebuffer is defined to be caused by buffer depletion rather than a user action.
+automaticallyWaitsToMinimizeStalling | bool | [iOS only](https://developer.apple.com/documentation/avfoundation/avplayer/1643482-automaticallywaitstominimizestal?language=objc)
 
 This prop should only be set when you are setting the source, changing it after the media is loaded will cause it to be reloaded.
 
@@ -353,13 +354,14 @@ Example with default values:
 ```
 bufferConfig={{
   minBufferMs: 15000,
-  maxBufferMs: 50000,
-  bufferForPlaybackMs: 2500,
-  bufferForPlaybackAfterRebufferMs: 5000
+  maxBufferMs: 50000, // not available on iOS
+  bufferForPlaybackMs: 2500, // not available on iOS
+  bufferForPlaybackAfterRebufferMs: 5000, // not available on iOS
+  automaticallyWaitsToMinimizeStalling: true
 }}
 ```
 
-Platforms: Android ExoPlayer
+Platforms: Android ExoPlayer, iOS
 
 #### controls
 Determines whether to show player controls.

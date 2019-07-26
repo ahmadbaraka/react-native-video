@@ -424,6 +424,7 @@ Video.propTypes = {
     maxBufferMs: PropTypes.number,
     bufferForPlaybackMs: PropTypes.number,
     bufferForPlaybackAfterRebufferMs: PropTypes.number,
+    automaticallyWaitsToMinimizeStalling: PropTypes.bool,
   }),
   stereoPan: PropTypes.number,
   rate: PropTypes.number,
